@@ -1,0 +1,399 @@
+import numpy as np
+import pandas as pd
+data = pd.read_csv("yield_prediction.csv")
+data
+data.shape
+data.index
+data.columns
+data.dtypes
+data.nunique()
+data.value_counts()
+data.describe()
+data.head()
+data.tail()
+#DATA CLEANING
+data.isnull()
+data.isnull().sum()
+data[data.isnull().any(axis=1)]
+data.notnull()
+data.notnull().sum()
+data[data.notnull().all(axis=1)]
+data.dropna()
+data.fillna("0",inplace=True)
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+data[['Area', 'Production']] = scaler.fit_transform(data[['Area', 'Production']])
+data.head()
+#CREATING NEW FEATURES
+data['Area_Per_Production'] = data['Area'] / data['Production']
+data.head()
+#DATA SAMPLING
+data_sampled = data.sample(frac=0.1, random_state=42)
+data.head()
+#FEATURE SELECTION
+from sklearn.feature_selection import SelectKBest, f_classif
+print(data.columns)
+selector = SelectKBest(score_func=f_classif, k=3)
+X_selected = selector.fit_transform(data[['Area', 'Production', 'Crop_Year']], data['Area_Per_Production'])
+
+#Decision tree
+import pandas as pd
+from sklearn.tree import DecisionTreeRegressor, plot_tree
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import mean_squared_error
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+
+# Read the CSV file
+data = pd.read_csv('data_1.csv')
+
+# Assuming 'Production' is your target variable and the rest are features
+X = data.drop('Production', axis=1)
+y = data['Production']
+
+# Convert categorical features to numerical using one-hot encoding
+X = pd.get_dummies(X)
+
+# Handle missing values in features
+imputer = SimpleImputer(strategy='mean')
+X = pd.DataFrame(imputer.fit_transform(X), columns=X.columns)
+
+# Handle missing values in the target variable
+y = y.fillna(y.mean())
+
+# Scale numerical features
+scaler = StandardScaler()
+X[X.select_dtypes(include=['float64']).columns] = scaler.fit_transform(X.select_dtypes(include=['float64']))
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Define a range of values for max_depth and other hyperparameters
+param_grid = {
+    'max_depth': [3, 5, 7, 10],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4]
+}
+
+# Create a decision tree regressor
+model = DecisionTreeRegressor()
+
+# Use GridSearchCV to find the best hyperparameters
+grid_search = GridSearchCV(model, param_grid, cv=5, scoring='neg_mean_squared_error')
+grid_search.fit(X_train, y_train)
+
+# Get the best parameter values
+best_params = grid_search.best_params_
+
+# Create a decision tree regressor with the best hyperparameters
+best_model = DecisionTreeRegressor(**best_params)
+best_model.fit(X_train, y_train)
+
+# Make predictions on the testing set
+predictions = best_model.predict(X_test)
+
+# Evaluate the model (for regression, use appropriate metrics such as mean squared error)
+mse = mean_squared_error(y_test, predictions)
+print(f"Best Hyperparameters: {best_params}")
+print(f"Mean Squared Error: {mse}")
+
+# Plot the decision tree
+plt.figure(figsize=(15, 10))
+plot_tree(best_model, filled=True, feature_names=X.columns, rounded=True)
+plt.show()
+
+#Naive Bayes Classification
+#Data Loading
+import pandas as pd
+data = pd.read_csv('data_1.csv')
+data.head()
+df = pd.DataFrame(data)
+print(df)
+#Data Exploration
+data.info()
+#using Seaborn to display counts of each season.
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Assuming 'Season' is the column you want to visualize
+sns.countplot(data=data, x='Season')
+plt.xticks(rotation=60, ha='right')
+plt.show()
+#using Seaborn to plot crop counts by season, adjusting figure size for clarity.
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Set the figure size
+plt.figure(figsize=(18, 10))
+
+# Assuming 'Crop' is the column you want to visualize
+# and 'Season' is used for hue
+sns.countplot(data=data, x='Crop', hue='Season')
+plt.xticks(rotation=90, ha='right')
+plt.show()
+#Data Processing
+#We will now convert the ‘Season’ column from categorical to integer using pandas get_dummies function.
+pre_df = pd.get_dummies(data,columns=['Season'],drop_first=True)
+pre_df.head()
+#splits data into training and testing sets for modeling.
+from sklearn.model_selection import train_test_split
+
+X = pre_df.drop('Crop', axis=1)
+y = pre_df['Crop']
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.33, random_state=125
+)
+#Model Building and Training and Model Evaluation
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.preprocessing import LabelEncoder
+from sklearn.impute import SimpleImputer
+
+# Load the dataset
+data = pd.read_csv(r"C:\Users\maddi udith kumar\OneDrive\Desktop\yield_prediction.csv")
+
+# Assuming 'target_column' is the name of the column you want to predict
+target_column = 'Crop'
+X = data.drop(target_column, axis=1)
+y = data[target_column]
+
+# Label encode the target column
+le = LabelEncoder()
+y = le.fit_transform(y)
+
+# Handle missing values
+imputer = SimpleImputer(strategy='mean')  # You can use other strategies like 'median' or 'most_frequent'
+X = pd.get_dummies(X)  # One-hot encode categorical variables before imputing
+X = pd.DataFrame(imputer.fit_transform(X), columns=X.columns)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Create and train the Gaussian Naive Bayes classifier
+model = GaussianNB()
+
+# Fit the model
+model.fit(X_train, y_train)
+
+# Evaluate the model performance on the test set
+y_pred = model.predict(X_test)
+
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+
+f1 = f1_score(y_test, y_pred, average='micro')
+print("F1 score:", f1)
+Accuracy: 0.04847721408399196
+F1 score: 0.04847721408399196
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Assuming y_test and y_pred are your true and predicted labels
+class_labels = ["Season", "Production", "Crop_Year"]  # Update with your actual class labels
+cm = confusion_matrix(y_test, y_pred)
+
+# Check the number of unique classes
+unique_classes = np.unique(np.concatenate((y_test, y_pred)))
+print("Number of unique classes:", len(unique_classes))
+
+# Update the display labels based on the actual class labels
+labels = [f"{class_labels[i % len(class_labels)]}" for i in range(len(unique_classes))]
+
+# Create a bar graph
+plt.figure(figsize=(10, 6))
+plt.bar(labels, np.sum(cm, axis=0))
+plt.xlabel('Predicted Labels', fontsize=14)
+plt.ylabel('Count', fontsize=14)
+plt.title('Distribution of Predicted Labels', fontsize=16)
+
+plt.show()
+import numpy as np
+from sklearn.datasets import make_blobs
+from matplotlib import pyplot as plt
+from matplotlib.pyplot import figure
+from pandas import DataFrame
+
+yield_production, _ = make_blobs(n_samples=1000, centers=3, n_features=2, random_state=20)
+df = DataFrame(dict(x=yield_production[:,0], y=yield_production[:,1]))
+fig, ax = plt.subplots(figsize=(10,10))
+df.plot(ax=ax, kind='scatter', x='x', y='y')
+plt.xlabel('production')
+plt.ylabel('crop')
+plt.show()
+def init_centroids(k, X):
+    arr = []
+    for i in range(k):
+        cx1 = np.random.uniform(min(X[:,0]), max(X[:,0]))
+        cx2 = np.random.uniform(min(X[:,1]), max(X[:,1]))
+        arr.append([cx1, cx2])
+    return np.asarray(arr)
+def dist(a, b):
+    return np.sqrt(sum(np.square(a-b)))
+#ASSIGNING CLUSTERS
+def assign_cluster(k, X, cg):
+    cluster = [-1]*len(X)
+    for i in range(len(X)):
+        dist_arr = []
+        for j in range(k):
+            dist_arr.append(dist(X[i], cg[j]))
+        idx = np.argmin(dist_arr)
+        cluster[i] = idx
+    return np.asarray(cluster)
+def compute_centroids(k, X, cluster):
+    cg_arr = []
+    for i in range(k):
+        arr = []
+        for j in range(len(X)):
+            if cluster[j]==i:
+                arr.append(X[j])
+        cg_arr.append(np.mean(arr, axis=0))
+    return np.asarray(cg_arr)
+def measure_change(cg_prev, cg_new):
+    res = 0
+    for a,b in zip(cg_prev,cg_new):
+        res+=dist(a,b)
+    return res
+#CLUSTERING USING DATAFRAMES
+def show_clusters(X, cluster, cg):
+    df = DataFrame(dict(x=X[:, 0], y=X[:, 1], label=cluster))
+    colors = {0: 'red', 1: 'yellow', 2: 'pink'}
+    fig, ax = plt.subplots(figsize=(8, 8))
+    grouped = df.groupby('label')
+    for key, group in grouped:
+        group.plot(ax=ax, kind='scatter', x='x', y='y', label=key, color=colors[key])
+    ax.scatter(cg[:, 0], cg[:, 1], marker='*', s=150, c='#ff2222')
+    plt.xlabel('X_1')
+    plt.ylabel('X_2')
+    plt.show()
+#K-MEANS
+def k_means(k, X):
+    cg_prev = init_centroids(k, X)
+    cluster = [0]*len(X)
+    cg_change = 100
+    while cg_change>.001:
+        cluster = assign_cluster(k, X, cg_prev)
+        show_clusters(X, cluster, cg_prev)
+        cg_new = compute_centroids(k, X, cluster)
+        cg_change = measure_change(cg_new, cg_prev)
+        cg_prev = cg_new
+    return cluster
+
+cluster = k_means(3, yield_production)
+pip install matplotlib
+#PIE CHART
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Replace 'yield_prediction.csv' with the actual file path or URL to your CSV file
+file_path = 'Project_bigdata.csv'
+
+# Read the CSV file into a DataFrame
+data = pd.read_csv(file_path)
+
+# Aggregating data to get total production for each crop
+agg_data = data.groupby('Crop')['Production'].sum().reset_index()
+
+# Selecting the top N crops based on production
+top_n = 10
+top_crops = agg_data.nlargest(top_n, 'Production')
+
+# Grouping smaller categories into 'Others'
+other_crops = agg_data[~agg_data['Crop'].isin(top_crops['Crop'])]
+others_row = pd.DataFrame({'Crop': ['Others'], 'Production': [other_crops['Production'].sum()]})
+agg_data_grouped = pd.concat([top_crops, others_row])
+
+# Assigning colors to each crop
+colors = sns.color_palette('husl', n_colors=len(agg_data_grouped))
+
+# Creating a pie chart for the top N crops and 'Others'
+plt.figure(figsize=(10, 8))
+plt.pie(
+    agg_data_grouped['Production'],
+    labels=None,  # Set labels to None to remove them from the pie chart
+    autopct=None,  # No autopct as we're not displaying percentages
+    startangle=90,
+    colors=colors
+)
+plt.title(f'Top {top_n} Crops and Others by Production')
+
+# Creating a legend
+legend_labels = [f'{crop}: {color}' for crop, color in zip(agg_data_grouped['Crop'], colors)]
+plt.legend(legend_labels, loc='center left', bbox_to_anchor=(1, 0.5))
+
+plt.show()
+#LINE GRAPH
+import matplotlib.pyplot as plt
+
+data_sorted = data.sort_values(by='Crop')
+selected_data = data_sorted.iloc[::len(data_sorted)//10, :]
+
+x_axis = selected_data['Crop']
+y_axis = selected_data['Crop_Year']
+
+plt.figure(figsize=(12, 6))
+
+plt.plot(x_axis, y_axis, color='black', linestyle='-.', marker='o', markerfacecolor='r')
+
+plt.xlabel('Crop Types')
+plt.ylabel('Crop Year')
+plt.title('Crop Productions Over Years')
+plt.xticks(rotation=45, ha='right', fontsize=10)  
+plt.tight_layout()  
+
+plt.grid(True)
+plt.show()
+import matplotlib.pyplot as plt
+
+grouped_data = data.groupby('Crop')['Crop_Year'].mean().reset_index()
+
+selected_data = grouped_data.iloc[::len(grouped_data)//10, :]
+
+plt.plot(selected_data['Crop'], selected_data['Crop_Year'], marker='o', linestyle='-', color='c')
+
+plt.xlabel('Crop Types')
+plt.ylabel('Average Year')
+plt.title('Average Crop Year Over Crops')
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+
+plt.show()
+#SCATTER PLOT
+import matplotlib.pyplot as plt
+
+Crop = data['Crop']
+Year = data['Crop_Year']
+
+selected_crop_values = Crop.unique()[::len(Crop.unique())//10]
+
+plt.scatter(Crop, Year, color='m', marker='o')
+plt.xlabel('Crop Types')
+plt.ylabel('Year')
+plt.title('Scatter Plot of Crop Production Over Years')
+
+plt.xticks(selected_crop_values, rotation=45, ha='right')
+
+plt.tight_layout()
+plt.show()
+#BAR GRAPH
+import matplotlib.pyplot as plt
+
+grouped_data = data.groupby('Crop')['Crop_Year'].mean().reset_index()
+
+selected_data = grouped_data.iloc[::len(grouped_data)//10, :]
+
+plt.bar(selected_data['Crop'], selected_data['Crop_Year'], color='c')
+
+plt.xlabel('Crop Types')
+plt.ylabel('Average Year')
+plt.title('Average Crop Year Over Crops')
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+
+plt.show()
+
