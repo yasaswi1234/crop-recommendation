@@ -1,4 +1,4 @@
-# crop-recommendation
+# Crop Recommendation System
 To address the challenges faced by Indian farmers in crop selection and yield prediction, a 
 comprehensive solution is proposed. This system incorporates precision agriculture, mining 
 techniques for crop yield prediction, and data-driven decision-making tools.
